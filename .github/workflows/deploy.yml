@@ -1,0 +1,49 @@
+name: Deploy Vue app to Server
+
+on:
+  push:
+    branches:
+      - main  # 只有推送到主分支时触发发布
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Node.js and pnpm
+      - name: Set up Node.js and pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      # Install dependencies
+      - name: Install dependencies
+        run: pnpm install
+
+      # Build the project
+      - name: Build Vue project
+        run: pnpm run build
+
+      # Deploy to the server
+      - name: Deploy to server
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          source: "dist/*"
+          target: "/home/ubuntu/imageedit"
+
+      # 5. 执行服务器上的命令（可选）
+      - name: Run Command on Server
+        uses: appleboy/ssh-action@v0.1.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            /home/ubuntu/imageedit-upload.sh
